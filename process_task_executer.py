@@ -1,8 +1,19 @@
 from multiprocessing import Process, Queue
 import sys
 
+class Singleton(type):
+    _instances = {}
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+        
+@abc
+class EventLooperState(meta=Singleton):
+    pass
 
-class Alarm():
+
+class EventLooper():
     FINISHED = 0 # TODO: make null-object pattern
     PUT_BACK = 1 # TODO: make null-object pattern
     _TERMINATE = 2 # TODO: make null-object pattern
@@ -10,7 +21,7 @@ class Alarm():
 
     def __init__(self) -> None:
         self._queue = Queue()
-        self._subprocess = Process(target=Alarm._subprocess_func, args=(self._queue,))
+        self._subprocess = Process(target=EventLooper._subprocess_func, args=(self._queue,))
 
 
     def AddTask(self, callback, **kwargs):
@@ -27,13 +38,13 @@ class Alarm():
 
 
     def terminate(self):
-        self.AddTask(Alarm._terminate)
+        self.AddTask(EventLooper._terminate)
         self._subprocess.join()
 
 
     @staticmethod
     def _terminate():
-        return Alarm._TERMINATE
+        return EventLooper._TERMINATE
 
 
     @staticmethod
@@ -41,9 +52,9 @@ class Alarm():
         while True:
             task = tasks_queue.get()
             rt = task["callback"](**task["kwargs"])
-            if rt == Alarm.PUT_BACK:
+            if rt == EventLooper.PUT_BACK:
                 tasks_queue.put(task, True)
-            elif rt == Alarm._TERMINATE:
+            elif rt == EventLooper._TERMINATE:
                 break
 
 
@@ -59,12 +70,12 @@ class foo():
     
         self._counter -= 1
         print(f"task no. {self._counter + 1}",file=sys.stderr, flush=True)
-        return Alarm.PUT_BACK if self._counter else Alarm.FINISHED
+        return EventLooper.PUT_BACK if self._counter else EventLooper.FINISHED
 
 
 
 if __name__== "__main__":
-    alarm = Alarm()
+    alarm = EventLooper()
     alarm.start()
     while count := int(input("0 to exit, else to add task with count\n")):
         alarm.AddTask(foo(), count=count)
