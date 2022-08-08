@@ -3,10 +3,11 @@ import sys
 
 
 class Alarm():
-    FINISHED = 0
-    PUT_BACK = 1
-    TERMINATE = 2
+    FINISHED = 0 # TODO: make null-object pattern
+    PUT_BACK = 1 # TODO: make null-object pattern
+    _TERMINATE = 2 # TODO: make null-object pattern
     
+
     def __init__(self) -> None:
         self._queue = Queue()
         self._subprocess = Process(target=Alarm._subprocess_func, args=(self._queue,))
@@ -29,9 +30,11 @@ class Alarm():
         self.AddTask(Alarm._terminate)
         self._subprocess.join()
 
+
     @staticmethod
     def _terminate():
-        return Alarm.TERMINATE
+        return Alarm._TERMINATE
+
 
     @staticmethod
     def _subprocess_func(tasks_queue: Queue):
@@ -40,7 +43,7 @@ class Alarm():
             rt = task["callback"](**task["kwargs"])
             if rt == Alarm.PUT_BACK:
                 tasks_queue.put(task, True)
-            elif rt == Alarm.TERMINATE:
+            elif rt == Alarm._TERMINATE:
                 break
 
 
