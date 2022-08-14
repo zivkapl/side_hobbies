@@ -1,5 +1,5 @@
-#ifndef __OL113_DOUBLY_LINKED_LIST_H__
-#define __OL113_DOUBLY_LINKED_LIST_H__
+#ifndef __ZK_DOUBLY_LINKED_LIST_H__
+#define __ZK_DOUBLY_LINKED_LIST_H__
 
 #include <stddef.h> /* size_t */
 
@@ -39,4 +39,4 @@ int DLListMultiFind(const dl_list_t *list, void *find_data, int (*cmp_func)(cons
 
 void DLListSplice(dll_iter_t dest_where, dll_iter_t src_iter_from, dll_iter_t src_iter_to);
 
-#endif /* __OL113_DOUBLY_LINKED_LIST_H__ */
+#endif /* __ZK_DOUBLY_LINKED_LIST_H__ */

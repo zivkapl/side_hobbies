@@ -1,5 +1,5 @@
-#ifndef __OL113_P_QUEUE_H__
-#define __OL113_P_QUEUE_H__
+#ifndef __ZK_P_QUEUE_H__
+#define __ZK_P_QUEUE_H__
 
 /********************************************/
 /* Priority Queue API                       */
@@ -26,4 +26,4 @@ void PQueueClear(p_queue_t *p_queue);
 void *PQueueErase(p_queue_t *p_queue, void *data,
                   int (*IsMatch)(const void *data1, const void *data2));
 
-#endif /* __OL113_P_QUEUE_H__ */
+#endif /* __ZK_P_QUEUE_H__ */

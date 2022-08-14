@@ -4,17 +4,21 @@ ARMCC 		= arm-linux-gnueabihf-g++
 CCFLAGS		= -ansi -pedantic-errors -Wall -Wextra -g -pthread
 ARMCCFLAGS	= -ansi -pedantic-errors -Wall -Wextra -g -pthread
 
-DOUBLY_LINKED_LIST_HDR	= ./doubly_linked_list/dl_list.h
-DOUBLY_LINKED_LIST_SRC	= ./doubly_linked_list/dl_list.c
+DOUBLY_LINKED_LIST_HDR	= ./priority_queue/doubly_linked_list/dl_list.h
+DOUBLY_LINKED_LIST_SRC	= ./priority_queue/doubly_linked_list/dl_list.c
 
-SORTED_DL_LIST_HDR		= ./sorted_linked_list/sorted_dl_list.h
-SORTED_DL_LIST_SRC		= ./sorted_linked_list/sorted_dl_list.c
+SORTED_DL_LIST_HDR		= ./priority_queue/sorted_linked_list/sorted_dl_list.h
+SORTED_DL_LIST_SRC		= ./priority_queue/sorted_linked_list/sorted_dl_list.c
 
-HPATH	 = -iquote ./sorted_linked_list -iquote ./doubly_linked_list
-SRCFILES = p_queue.c p_queue_main.c ./sorted_linked_list/sorted_dl_list.c 
+PRIORITY_QUEUE_HDR	= ./priority_queue/p_queue.h
+PRIORITY_QUEUE_SRC	= ./priority_queue/p_queue.c
 
-DEP_HEADERS	= $(DOUBLY_LINKED_LIST_HDR) $(SORTED_DL_LIST_HDR)
-DEP_SRC		= $(DOUBLY_LINKED_LIST_SRC) $(SORTED_DL_LIST_SRC)
+HPATH	 = -iquote ./priority_queue/ \
+			-iquote ./priority_queue/doubly_linked_list \
+			-iquote ./priority_queue/sorted_linked_list
+
+DEP_HEADERS	= $(DOUBLY_LINKED_LIST_HDR) $(SORTED_DL_LIST_HDR) $(PRIORITY_QUEUE_HDR)
+DEP_SRC		= $(DOUBLY_LINKED_LIST_SRC) $(SORTED_DL_LIST_SRC) $(PRIORITY_QUEUE_SRC)
 
 
 SRC_HEADERS	= $(wildcard *.h)

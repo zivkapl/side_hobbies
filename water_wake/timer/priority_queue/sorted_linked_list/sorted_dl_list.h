@@ -1,5 +1,5 @@
-#ifndef __OL113_SORTED_L_LIST_H__
-#define __OL113_SORTED_L_LIST_H__
+#ifndef __ZK_SORTED_L_LIST_H__
+#define __ZK_SORTED_L_LIST_H__
 
 /******************************************/
 /* Sorted Linked List API                 */
@@ -62,4 +62,4 @@ sorted_list_iter_t SortedListFind(sorted_list_t *s_list, sorted_list_iter_t from
 sorted_list_iter_t SortedListFindIf(sorted_list_iter_t from, sorted_list_iter_t to,
 									void *data, compare_func_t compare_func);
 
-#endif /* __OL113_SORTED_L_LIST_H_ */
+#endif /* __ZK_SORTED_L_LIST_H_ */
