@@ -6,7 +6,9 @@
 /* Version 5                              */ 
 /******************************************/
 
-void run(void);
+#include <stdint.h>
+
+void run(uint64_t param);
 void join(void);
 
 #endif /* __PY_C_THREAD_EXAMPLE__ */
