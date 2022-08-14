@@ -15,7 +15,7 @@ SOURCES		= $(MAIN_SRC) $(DEP_SRC)
 OBJECTS		= $(SOURCES:.c=.o) $(DEP_SRC:.c=.o)
 DEB_EXE		= deb.out
 RAS_EXE		= raspi.out
-SO_FILE		= simple_thread.so
+SO_FILE		= $(MAIN_SRC:c=.so)
 EXECUTABLES = $(DEB_EXE) $(RAS_EXE) $(SO_FILE)
 
 .PHONY : all clean rebuild obj_files
