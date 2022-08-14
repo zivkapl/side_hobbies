@@ -17,13 +17,7 @@ void PQueueDestroy(p_queue_t *p_queue);
 
 int PQueueEnqueue(p_queue_t *p_queue, void *data);
 void *PQueueDequeue(p_queue_t *p_queue);
-void *PQueuePeek(p_queue_t *p_queue);
 
 int PQueueIsEmpty(const p_queue_t *p_queue);
-size_t PQueueSize(const p_queue_t *p_queue);
-
-void PQueueClear(p_queue_t *p_queue);
-void *PQueueErase(p_queue_t *p_queue, void *data,
-                  int (*IsMatch)(const void *data1, const void *data2));
 
 #endif /* __ZK_P_QUEUE_H__ */

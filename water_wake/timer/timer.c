@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 #include <unistd.h>
@@ -22,16 +23,10 @@ typedef enum priorities
     HIGH
 } priorities_t;
 
-typedef struct timer_resources
-{
-    pthread_mutex_t lock;
-    p_queue_t *queue;
-} timer_resources_t;
-
-struct timer_thread
+struct timer_service
 {
     pthread_t id;
-    timer_resources_t resources;
+    p_queue_t *queue;
 };
 
 struct timer_instance
@@ -43,6 +38,9 @@ struct timer_instance
     priorities_t priority;
 };
 
+static void *myThreadFunc(void *param);
+static int compare_func(const void *data1, const void *data2);
+
 /* // TODO: CHECK */
 static int compare_func(const void *data1, const void *data2)
 {
@@ -51,15 +49,14 @@ static int compare_func(const void *data1, const void *data2)
 }
 
 
-timer_thread_t *timer_thread_init(void)
+timer_service_t *timer_thread_init(void)
 {
-    timer_thread_t* new_service = NULL;
+    timer_service_t* new_service = NULL;
     p_queue_t *new_queue = NULL;
-    pthread_mutex_t* new_lock = NULL;
     pthread_t new_thread = 0;
     int res = 0;
     
-    new_service = (timer_thread_t*)malloc(sizeof(timer_thread_t));
+    new_service = (timer_service_t*)malloc(sizeof(timer_service_t));
     if (!new_service)
     {
         return NULL;
@@ -74,28 +71,12 @@ timer_thread_t *timer_thread_init(void)
         return NULL;
     }
 
-    res = pthread_mutex_init(new_lock, NULL);
-    if (res)
-    {
-        free(new_service);
-        new_service = NULL;
-
-        PQueueDestroy(new_queue);
-        new_queue = NULL;
-
-        /* // TODO: send task that closes the thread */
-        pthread_join(thread_id, NULL);
-
-        return NULL;
-    }
-
     /* init */
-    memset(new_service, 0 , sizeof(timer_thread_t));
+    memset(new_service, 0 , sizeof(timer_service_t));
 
-    new_service->resources.queue = new_queue;
-    new_service->resources.lock= new_lock;
+    new_service->queue = new_queue;
 
-    res = pthread_create(&new_thread, NULL, myThreadFunc, (void *)(&new_service->resources));
+    res = pthread_create(&new_thread, NULL, myThreadFunc, (void *)(new_service->queue));
     if (res)
     {
         free(new_service);
@@ -112,23 +93,35 @@ timer_thread_t *timer_thread_init(void)
     return new_service;
 }
 
+void timer_thread_destroy(timer_service_t* timer_service)
+{
+    if (!timer_service)
+    {
+        return;
+    }
+
+
+}
 
 static void *myThreadFunc(void *param)
 {
-    timer_resources_t *resources = (timer_resources_t *)param;
-    pthread_mutex_lock(resources->lock);
-    
-    pthread_mutex_unlock(resources->lock);
+    p_queue_t *queue = (p_queue_t *)param;
+    timer_instance_t *task = (timer_instance_t *)PQueueDequeue(queue);
 
-
+    if (task->is_active && (NULL) < task->time_to_ring)
+    {
+        PQueueEnqueue(queue, (void *)task);
+        /* // TODO: error handling */
+    }
+    else
+    {
+        if (task->is_active)
+        {
+            task->callback(task->param);
+        }
+     
+        /* free task object */
+    }
 
     return NULL;
 }
-
-
-
-void join(void)
-{
-    pthread_join(thread_id, NULL);
-}
- */

@@ -11,4 +11,6 @@
 void run(uint64_t param);
 void join(void);
 
+extern char *yuval;
+
 #endif /* __PY_C_THREAD_EXAMPLE__ */

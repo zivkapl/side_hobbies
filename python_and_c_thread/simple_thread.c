@@ -4,9 +4,7 @@
 
 #include "simple_thread.h"
 
-
 pthread_t thread_id = { 0 };
-
 
 static void *myThreadFunc(void *param)
 {
