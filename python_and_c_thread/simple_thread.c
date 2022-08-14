@@ -10,10 +10,10 @@ pthread_t thread_id = { 0 };
 
 static void *myThreadFunc(void *param)
 {
-    int i;
+    uint64_t i;
     for(i = 0; i < (uint64_t)param; i++)
     {
-        printf("from C thread. i = %d\n", i);
+        printf("from C thread. i = %llu\n", i);
         sleep(1);
     }
 

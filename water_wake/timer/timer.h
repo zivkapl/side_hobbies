@@ -10,8 +10,9 @@
 
 typedef struct timer_thread timer_thread_t;
 typedef struct timer_instance timer_inst_t;
-/* 
+
 timer_thread_t *timer_thread_init(void);
+/* 
 void timer_thread_join(timer_thread_t *timer_thread);
 void timer_thread_force_stop_and_join(timer_thread_t *timer_thread);
 
