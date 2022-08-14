@@ -1,0 +1,7 @@
+make --dry-run --keep-going --print-directory
+make: Entering directory `/Users/zkaplan/Documents/Projects/side_hobbies'
+ 
+make: Leaving directory `/Users/zkaplan/Documents/Projects/side_hobbies'
+ 
+make: *** No targets specified and no makefile found.  Stop.
+
