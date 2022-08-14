@@ -1,31 +1,34 @@
 #include <stdio.h>
+#include <stdbool.h>
 #include <unistd.h>
+#include <time.h>
 #include <pthread.h>
 
-#include "timer.h"
-
+#include "timer.h" /* header file of this source file */
 #include "p_queue.h"
 
-/* 
-typedef struct timer_thread
+typedef enum timer_states
+{
+    OFF = 0,
+    ON
+} timer_states_t;
+
+struct timer_thread
 {
     pthread_t id;
-    pthread_mutex_t lock
+    pthread_mutex_t lock;
+    p_queue_t *queue;
+};
 
-} timer_thread_t;
-
-typedef struct timer_instance
+struct timer_instance
 {
+    void *(*callback)(void *param);
+    void *param;
+    time_t time_to_ring;
+    timer_states_t is_active;
+};
 
-} timer_inst_t;
 
-timer_thread_t *timer_thread_init();
-void timer_thread_join(timer_thread_t *timer_thread);
-void timer_thread_force_stop_and_join(timer_thread_t *timer_thread);
-
-timer_inst_t *set_timer(timer_thread_t *timer_thread);
-void clear_timer(timer_thread_t *timer_thread, timer_inst_t* timer);
- */
 /* 
 static void *myThreadFunc(void *param)
 {
