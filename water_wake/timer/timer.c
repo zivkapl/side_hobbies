@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
+
 #include <unistd.h>
 #include <time.h>
 #include <pthread.h>
@@ -10,12 +10,9 @@
 #include "timer.h" /* header file of this source file */
 #include "p_queue.h"
 
-typedef enum boolean
-{
-    FALSE = 0,
-    TRUE = 1
-} boolean_t;
-
+#define true   1
+#define false  0
+#define bool  int
 
 typedef enum priorities
 {
@@ -35,7 +32,7 @@ struct timer_task
     void *(*callback)(void *param);
     void *param;
     time_t time_to_ring;
-    boolean_t is_active;
+    bool is_active;
     priorities_t priority;
 };
 
@@ -46,7 +43,7 @@ static timer_task_t *_set_timer(timer_service_t *timer_service,
                         void *(*callback)(void *param), 
                         void *param,
                         priorities_t priority);
-static boolean_t callback_wrapper(void *(*callback)(void *param), void *param);
+static bool callback_wrapper(void *(*callback)(void *param), void *param);
 static void _timer_service_join(timer_service_t *timer_service, priorities_t priority);
 
 static int compare_func(const void *data1, const void *data2)
@@ -56,15 +53,15 @@ static int compare_func(const void *data1, const void *data2)
             ((timer_task_t *)data2)->priority;
 }
 
-static boolean_t callback_wrapper(void *(*callback)(void *param), void *param)
+static bool callback_wrapper(void *(*callback)(void *param), void *param)
 {
     if (callback)
     {
         callback(param);
-        return TRUE;
+        return true;
     }
 
-    return FALSE;
+    return false;
 }
 
 timer_service_t *timer_thread_init(void)
@@ -133,7 +130,7 @@ void timer_service_destroy(timer_service_t* timer_service)
 static void *myThreadFunc(void *param)
 {
     p_queue_t *queue = ((timer_service_t *)param)->queue;
-    boolean_t keep_running = TRUE;
+    bool keep_running = true;
 
     while(keep_running)
     {
@@ -175,7 +172,7 @@ static timer_task_t *_set_timer(timer_service_t *timer_service,
     }
 
     new_task->callback = callback;
-    new_task->is_active = TRUE;
+    new_task->is_active = true;
     new_task->param = param;
     new_task->priority = priority;
     new_task->time_to_ring = time(NULL) + seconds_from_now;
@@ -211,7 +208,7 @@ void deactivate_timer(timer_task_t* timer)
         return;
     }
 
-    timer->is_active = FALSE;
+    timer->is_active = false;
 }
 
 static void _timer_service_join(timer_service_t *timer_service, priorities_t priority)
