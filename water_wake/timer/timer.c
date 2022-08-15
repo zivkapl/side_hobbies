@@ -64,7 +64,7 @@ static bool callback_wrapper(void *(*callback)(void *param), void *param)
     return false;
 }
 
-timer_service_t *timer_thread_init(void)
+timer_service_t *timer_service_init(void)
 {
     timer_service_t* new_service = NULL;
     p_queue_t *new_queue = NULL;
