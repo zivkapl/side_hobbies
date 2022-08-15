@@ -45,6 +45,7 @@ static timer_task_t *_set_timer(timer_service_t *timer_service,
                         priorities_t priority);
 static bool callback_wrapper(void *(*callback)(void *param), void *param);
 static void _timer_service_join(timer_service_t *timer_service, priorities_t priority);
+static void _timer_service_destroy(timer_service_t* timer_service);
 
 static int compare_func(const void *data1, const void *data2)
 {
@@ -76,7 +77,6 @@ timer_service_t *timer_service_init(void)
     {
         return NULL;
     }
-
     new_queue = PQueueCreate(compare_func);
     if (!new_queue)
     {
@@ -108,7 +108,7 @@ timer_service_t *timer_service_init(void)
     return new_service;
 }
 
-void timer_service_destroy(timer_service_t* timer_service)
+static void _timer_service_destroy(timer_service_t* timer_service)
 {    
     if (!timer_service)
     {
@@ -231,6 +231,8 @@ void timer_service_force_stop_and_join(timer_service_t *timer_service)
     assert(timer_service);
 
     _timer_service_join(timer_service, HIGH);
+    _timer_service_destroy(timer_service);
+
 }
 
 void timer_service_wait_and_join(timer_service_t *timer_service)
@@ -238,4 +240,6 @@ void timer_service_wait_and_join(timer_service_t *timer_service)
     assert(timer_service);
 
     _timer_service_join(timer_service, LOW);
+    _timer_service_destroy(timer_service);
+
 }

@@ -14,7 +14,6 @@ typedef struct timer_task timer_task_t;
 timer_service_t *timer_service_init(void);
 void timer_service_wait_and_join(timer_service_t *timer_service);
 void timer_service_force_stop_and_join(timer_service_t *timer_service);
-void timer_service_destroy(timer_service_t* timer_service); /* must be called after join */
 
 timer_task_t *set_timer(timer_service_t *timer_service,
                         uint64_t seconds_from_now,
