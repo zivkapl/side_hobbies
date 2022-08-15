@@ -18,6 +18,6 @@ void PQueueDestroy(p_queue_t *p_queue);
 int PQueueEnqueue(p_queue_t *p_queue, void *data);
 void *PQueueDequeue(p_queue_t *p_queue);
 
-int PQueueIsEmpty(const p_queue_t *p_queue);
+int PQueueIsEmpty(const p_queue_t *p_queue); /* not thread-safe */
 
 #endif /* __ZK_P_QUEUE_H__ */

@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,11 +10,11 @@
 #include "timer.h" /* header file of this source file */
 #include "p_queue.h"
 
-typedef enum timer_states
+typedef enum boolean
 {
-    OFF = 0,
-    ON
-} timer_states_t;
+    FALSE = 0,
+    TRUE = 1
+} boolean_t;
 
 
 typedef enum priorities
@@ -29,25 +30,42 @@ struct timer_service
     p_queue_t *queue;
 };
 
-struct timer_instance
+struct timer_task
 {
     void *(*callback)(void *param);
     void *param;
     time_t time_to_ring;
-    timer_states_t is_active;
+    boolean_t is_active;
     priorities_t priority;
 };
 
 static void *myThreadFunc(void *param);
 static int compare_func(const void *data1, const void *data2);
+static timer_task_t *_set_timer(timer_service_t *timer_service,
+                        uint64_t seconds_from_now,
+                        void *(*callback)(void *param), 
+                        void *param,
+                        priorities_t priority);
+static boolean_t callback_wrapper(void *(*callback)(void *param), void *param);
+static void _timer_service_join(timer_service_t *timer_service, priorities_t priority);
 
-/* // TODO: CHECK */
 static int compare_func(const void *data1, const void *data2)
 {
-    return ((timer_instance_t *)data1)->priority -
-            ((timer_instance_t *)data2)->priority;
+/* // TODO: CHECK */
+    return ((timer_task_t *)data1)->priority -
+            ((timer_task_t *)data2)->priority;
 }
 
+static boolean_t callback_wrapper(void *(*callback)(void *param), void *param)
+{
+    if (callback)
+    {
+        callback(param);
+        return TRUE;
+    }
+
+    return FALSE;
+}
 
 timer_service_t *timer_thread_init(void)
 {
@@ -76,7 +94,7 @@ timer_service_t *timer_thread_init(void)
 
     new_service->queue = new_queue;
 
-    res = pthread_create(&new_thread, NULL, myThreadFunc, (void *)(new_service->queue));
+    res = pthread_create(&new_thread, NULL, myThreadFunc, (void *)(new_service));
     if (res)
     {
         free(new_service);
@@ -93,35 +111,134 @@ timer_service_t *timer_thread_init(void)
     return new_service;
 }
 
-void timer_thread_destroy(timer_service_t* timer_service)
-{
+void timer_service_destroy(timer_service_t* timer_service)
+{    
     if (!timer_service)
     {
         return;
     }
 
+    while (!PQueueIsEmpty(timer_service->queue))
+    {
+        free(PQueueDequeue(timer_service->queue));
+    }
 
+    PQueueDestroy(timer_service->queue);
+    timer_service->queue = NULL;
+
+    free(timer_service);
+    timer_service = NULL;
 }
 
 static void *myThreadFunc(void *param)
 {
-    p_queue_t *queue = (p_queue_t *)param;
-    timer_instance_t *task = (timer_instance_t *)PQueueDequeue(queue);
+    p_queue_t *queue = ((timer_service_t *)param)->queue;
+    boolean_t keep_running = TRUE;
 
-    if (task->is_active && (NULL) < task->time_to_ring)
+    while(keep_running)
     {
-        PQueueEnqueue(queue, (void *)task);
-        /* // TODO: error handling */
-    }
-    else
-    {
-        if (task->is_active)
+        timer_task_t *task = (timer_task_t *)PQueueDequeue(queue);
+
+        if (time(NULL) >= task->time_to_ring)
         {
-            task->callback(task->param);
+            if (task->is_active)
+            {
+                keep_running = callback_wrapper(task->callback, task->param);
+            }
+        
+            /* free task object */
+            free(task);
+            task = NULL;
         }
-     
-        /* free task object */
+        else
+        {
+            if (EXIT_SUCCESS != PQueueEnqueue(queue, (void *)task))
+            {
+                ;    /* // TODO: log error */
+            }
+        }
     }
 
     return NULL;
+}
+
+static timer_task_t *_set_timer(timer_service_t *timer_service,
+                        uint64_t seconds_from_now,
+                        void *(*callback)(void *param), 
+                        void *param,
+                        priorities_t priority)
+{
+    timer_task_t *new_task = (timer_task_t *)malloc(sizeof(timer_task_t));
+    if (!new_task)
+    {
+        return NULL;
+    }
+
+    new_task->callback = callback;
+    new_task->is_active = TRUE;
+    new_task->param = param;
+    new_task->priority = priority;
+    new_task->time_to_ring = time(NULL) + seconds_from_now;
+
+    if (EXIT_SUCCESS != PQueueEnqueue(timer_service->queue, (void *)new_task))
+    {
+        ;    /* // TODO: log error */
+        free(new_task);
+        new_task = NULL;
+
+        return NULL;
+    }
+
+    return new_task;
+}
+
+
+timer_task_t *set_timer(timer_service_t *timer_service,
+                        uint64_t seconds_from_now,
+                        void *(*callback)(void *param), 
+                        void *param)
+{
+    assert(timer_service);
+    assert(callback);
+    
+    return _set_timer(timer_service, seconds_from_now, callback, param, MEDIUM);
+}
+
+void deactivate_timer(timer_task_t* timer)
+{
+    if (!timer)
+    {
+        return;
+    }
+
+    timer->is_active = FALSE;
+}
+
+static void _timer_service_join(timer_service_t *timer_service, priorities_t priority)
+{
+    assert(timer_service);
+
+    if (!_set_timer(timer_service, 0, NULL, NULL, priority))
+    {
+        ;    /* // TODO: handle error */
+    }
+
+    if (pthread_join(timer_service->id, NULL))
+    {
+        ;    /* // TODO: handle error */
+    }
+}
+
+void timer_service_force_stop_and_join(timer_service_t *timer_service)
+{
+    assert(timer_service);
+
+    _timer_service_join(timer_service, HIGH);
+}
+
+void timer_service_wait_and_join(timer_service_t *timer_service)
+{
+    assert(timer_service);
+
+    _timer_service_join(timer_service, LOW);
 }
