@@ -96,6 +96,7 @@ def main():
     timer.create_consumer_processes()
 
     for i in range(10, 0, -2):
+        print(i)
         timer.add_task(Callable(time() + i, print, "printed in {}".format(time() + i)))
 
     timer.join()
