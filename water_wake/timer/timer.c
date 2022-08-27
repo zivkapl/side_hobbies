@@ -29,7 +29,7 @@ struct timer_service
 
 struct timer_task
 {
-    void *(*callback)(void *param);
+    int (*callback)(void *param);
     void *param;
     time_t time_to_ring;
     bool is_active;
@@ -40,10 +40,10 @@ static void *myThreadFunc(void *param);
 static int compare_func(const void *data1, const void *data2);
 static timer_task_t *_set_timer(timer_service_t *timer_service,
                         uint64_t seconds_from_now,
-                        void *(*callback)(void *param), 
+                        int (*callback)(void *param), 
                         void *param,
                         priorities_t priority);
-static bool callback_wrapper(void *(*callback)(void *param), void *param);
+static bool callback_wrapper(int (*callback)(void *param), void *param);
 static void _timer_service_join(timer_service_t *timer_service, priorities_t priority);
 static void _timer_service_destroy(timer_service_t* timer_service);
 
@@ -54,7 +54,7 @@ static int compare_func(const void *data1, const void *data2)
             ((timer_task_t *)data2)->priority;
 }
 
-static bool callback_wrapper(void *(*callback)(void *param), void *param)
+static bool callback_wrapper(int (*callback)(void *param), void *param)
 {
     if (callback)
     {
@@ -161,7 +161,7 @@ static void *myThreadFunc(void *param)
 
 static timer_task_t *_set_timer(timer_service_t *timer_service,
                         uint64_t seconds_from_now,
-                        void *(*callback)(void *param), 
+                        int (*callback)(void *param), 
                         void *param,
                         priorities_t priority)
 {
@@ -192,7 +192,7 @@ static timer_task_t *_set_timer(timer_service_t *timer_service,
 
 timer_task_t *set_timer(timer_service_t *timer_service,
                         uint64_t seconds_from_now,
-                        void *(*callback)(void *param), 
+                        int (*callback)(void *param), 
                         void *param)
 {
     assert(timer_service);

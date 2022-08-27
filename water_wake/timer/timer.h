@@ -17,7 +17,7 @@ void timer_service_force_stop_and_join(timer_service_t *timer_service);
 
 timer_task_t *set_timer(timer_service_t *timer_service,
                         uint64_t seconds_from_now,
-                        void *(*callback)(void *param), 
+                        int (*callback)(void *param), 
                         void *param);
  
 void deactivate_timer(timer_task_t* timer);
