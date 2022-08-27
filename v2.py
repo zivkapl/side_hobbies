@@ -1,6 +1,5 @@
 # main_process:
-#     adds new tasks to a local priority queue
-#     pops that priority queue into the multi-process queue
+#     main thread:adds new tasks to a local priority queue
 # 
 # workers:
 #   thread that sorts: pop the queue into a local priority queue
@@ -29,29 +28,20 @@ class Callable:
 
 class TimerManager:
     def __init__(self) -> None:
-        self._sorting_queue = PriorityQueue()
         self._process_queue = Queue()
-        self._process_workers: list[Process] = []
-        self._sorting_thread = Thread(target=self._sorting_func)
-        self._sorting_thread.start()
-
-
-    def _sorting_func(self):
-        while True:
-            self._process_queue.put(self._sorting_queue.get())
+        self._process_workers: list[ConsumerProcess] = []
 
 
     def add_task(self, task: Callable):
-        self._sorting_queue.put((task.get_time(), task))
+        self._process_queue.put(task)
     
 
     def create_consumer_processes(self, num_of_process: int=1):
         for i in range(num_of_process):
             self._process_workers.append(ConsumerProcess(self._process_queue))
-            self._process_workers[i].start()
+
 
     def join(self):
-        self._sorting_thread.join()
         for p in self._process_workers:
             p.join()
 
@@ -62,6 +52,7 @@ class ConsumerProcess:
         self._sorting_queue = None
         self._sorting_thread = None
         self._subprocess = Process(target=self._consumer_func)
+        self._subprocess.start()
 
 
     def _sorting_func(self):
@@ -74,12 +65,15 @@ class ConsumerProcess:
         self._sorting_thread = Thread(target=self._sorting_func)
         self._sorting_thread.start()
 
-        while True:
+        self._keep_running = True # check if process safe
+        while self._keep_running:
             task: Callable = self._sorting_queue.get()
             if time() >= task.get_time():
                 task()
             else:
                 self._sorting_queue.put((task.get_time(), task))
+
+        self._sorting_thread.join()
 
 
     def start(self):
@@ -87,7 +81,7 @@ class ConsumerProcess:
 
 
     def join(self):
-        self._sorting_thread.join()
+        self._keep_running = False
         self._subprocess.join()
 
 
