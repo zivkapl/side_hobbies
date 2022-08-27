@@ -42,6 +42,8 @@ class TimerManager:
 
 
     def join(self):
+        # TODO: not stopping process, it stuck on queue.get()
+        # maybe to add a pipe that says if to close?
         for p in self._process_workers:
             p.join()
 
@@ -57,7 +59,8 @@ class ConsumerProcess:
 
     def _sorting_func(self):
         while True:
-            self._process_queue.put(self._sorting_queue.get())
+            task: Callable = self._process_queue.get()
+            self._sorting_queue.put((task.get_time(), task))
 
 
     def _consumer_func(self):
@@ -65,9 +68,9 @@ class ConsumerProcess:
         self._sorting_thread = Thread(target=self._sorting_func)
         self._sorting_thread.start()
 
-        self._keep_running = True # check if process safe
+        self._keep_running = True # TODO: check if process safe
         while self._keep_running:
-            task: Callable = self._sorting_queue.get()
+            task: Callable = self._sorting_queue.get()[1]
             if time() >= task.get_time():
                 task()
             else:
@@ -90,7 +93,7 @@ def main():
     timer.create_consumer_processes()
 
     for i in range(10, 0, -2):
-        timer.add_task(Callable(time() + i, print, "printed in {}".format(time() + i)))
+        timer.add_task(Callable(time() + i, print, "printed in now + {}".format(i)))
 
     timer.join()
 
