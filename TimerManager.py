@@ -1,12 +1,21 @@
 # Design:
 #
 #   main process:
-#       adds new tasks to a process shared queue
+#       for adding: adds new tasks to a process shared queue
+#       for removal: adds the tasks UUID to the queue
 # 
 # 
 #   worker process(s):
-#       thread that sorts the queue pop the queue into a local priority queue
-#       thread that calls the tasks from local sorted queue
+#       has 2 threads:
+#           1. thread that pop the shared queue
+#               - adding: adds the new task to a local priority queue
+#                   and a local dictionary with the task's UUID as key
+#               - removal: pops an UUID, go to the tasks object in the dict 
+#                   and mark it as inactive
+#           2. thread that pop the tasks from local sorted queue, 
+#               if their time arrived:
+#                   if active: call the callback
+#               else put back in local priority queue 
 
 
 
