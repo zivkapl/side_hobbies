@@ -77,10 +77,19 @@ class _ConsumerProcess:
         self._process_queue = process_queue
         self._sorting_queue = None
         self._sorting_thread = None
-        self._subprocess = Process(target=self._consumer_func)
+        self._subprocess = Process(target=self._entry_func)
 
         self._subprocess.start()
 
+    def _entry_func(self):
+        self._sorting_queue = PriorityQueue()
+        self._sorting_thread = Thread(target=self._sorting_func)
+        self._sorting_thread.start()
+
+        self._consume()
+
+        self._sorting_thread.join()
+        
     def _sorting_func(self):
         all_tasks_map: dict[UUID: Task] = {}
         while True:
@@ -99,11 +108,7 @@ class _ConsumerProcess:
                 self._sorting_queue.put((new_task.get_time(), new_task))
                 all_tasks_map[new_task._uuid] = new_task
 
-    def _consumer_func(self):
-        self._sorting_queue = PriorityQueue()
-        self._sorting_thread = Thread(target=self._sorting_func)
-        self._sorting_thread.start()
-        
+    def _consume(self):
         keep_going = True
         while keep_going:
             task: Task = self._sorting_queue.get()[1]
@@ -114,8 +119,6 @@ class _ConsumerProcess:
                 self._sorting_queue.put((task.get_time(), task))
         
             keep_going = self._sorting_queue.qsize() > 0
-
-        self._sorting_thread.join()
 
     def join(self):
         self._subprocess.join()
