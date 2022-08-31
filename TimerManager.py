@@ -112,13 +112,15 @@ class _ConsumerProcess:
         keep_going = True
         while keep_going:
             task: Task = self._sorting_queue.get()[1]
-            if time() >= task.get_time():
+            if isinstance(task, _TerminatorTask):
+                if self._sorting_queue.qsize() == 0:
+                    return
+            elif time() >= task.get_time():
                 if task._is_active:
                     task()
             else:
                 self._sorting_queue.put((task.get_time(), task))
         
-            keep_going = self._sorting_queue.qsize() > 0
 
     def join(self):
         self._subprocess.join()
@@ -135,8 +137,18 @@ def main():
         timer.add_task(new_task)
     
 
-    timer.remove_task(all_tasks[0])
-    timer.remove_task(all_tasks[-1])
+    # timer.remove_task(all_tasks[0])
+    # timer.remove_task(all_tasks[-1])
+
+    a = input("press any key to contine\n")
+    print(a)
+
+    for i in range(10, 0, -1):
+        print("in loop") 
+        new_task = Task(time() + i, print, f"printed in {i} seconds delay")
+        all_tasks.append(new_task)
+        timer.add_task(new_task)
+
 
     timer.join()
 
