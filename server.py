@@ -5,10 +5,10 @@ from flask import Flask, request
 
 app = Flask(__name__)
 timer = None
-db = []
+db = {}
 
-def get_handler():
-    return "<p>Hello, World!</p>"
+def get_handler(request):
+    return "Currently active timers: {}".format("".join([ 'task ' + str(uuid) + '\n' for uuid in db.keys() ]))
 
 def post_handler(request):
     req_data = request.json
@@ -22,12 +22,20 @@ def post_handler(request):
     
     new_task = Task(time.time() + seconds, 
                     os.system, f'osascript -e \'display notification "Task no. {len(db)}"\'')
-    db.append(new_task)
+    db[str(new_task.get_uuid())] = new_task
     timer.add_task(new_task)
     return f"added task in {seconds} seconds from now"
 
 def del_handler(request):
-    return "DEL REQ"
+    req_data = request.json
+    if "id" not in req_data:
+        return "ERROR"
+
+    try:
+        timer.remove_task(db[req_data["id"]])
+    except:
+        return "no such task"
+    return "removed task {}".format(req_data["id"])
 
 @app.route("/", methods=['GET', 'POST', 'DELETE'])
 def handler():

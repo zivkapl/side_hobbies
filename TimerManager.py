@@ -19,7 +19,7 @@
 
 
 
-from time import time
+from time import time, sleep
 from multiprocessing import Process, Queue, Value
 from threading import Thread
 from queue import PriorityQueue
@@ -35,6 +35,9 @@ class Task:
 
     def get_time(self):
         return self._time
+
+    def get_uuid(self):
+        return self._uuid
 
     def __call__(self):
         self._func(*self._args)
@@ -106,7 +109,7 @@ class _ConsumerProcess:
                     return
 
                 self._sorting_queue.put((new_task.get_time(), new_task))
-                all_tasks_map[new_task._uuid] = new_task
+                all_tasks_map[new_task.get_uuid()] = new_task
 
     def _consume(self):
         keep_going = True
@@ -136,19 +139,16 @@ def main():
         all_tasks.append(new_task)
         timer.add_task(new_task)
     
-
-    # timer.remove_task(all_tasks[0])
-    # timer.remove_task(all_tasks[-1])
-
+    timer.remove_task(all_tasks[0])
+    timer.remove_task(all_tasks[-1])
+    sleep(10)
     a = input("press any key to contine\n")
-    print(a)
+    print("adding new tasks")
 
     for i in range(10, 0, -1):
-        print("in loop") 
         new_task = Task(time() + i, print, f"printed in {i} seconds delay")
         all_tasks.append(new_task)
         timer.add_task(new_task)
-
 
     timer.join()
 
