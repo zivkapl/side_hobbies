@@ -19,31 +19,15 @@
 
 
 
-from time import time, sleep
-from multiprocessing import Process, Queue, Value
+from time import time
+from multiprocessing import Process, Queue
 from threading import Thread
 from queue import PriorityQueue
-from uuid import UUID, uuid4
+from uuid import UUID
 
-class Task:
-    def __init__(self, time, func, *args) -> None:
-        self._time = time
-        self._func = func
-        self._args = args
-        self._is_active = True
-        self._uuid = uuid4()
+from task import Task
 
-    def get_time(self):
-        return self._time
-
-    def get_uuid(self):
-        return self._uuid
-
-    def __call__(self):
-        self._func(*self._args)
-
-
-class _TerminatorTask(Task):
+class _TerminatorTaskProcess(Task):
     def __init__(self) -> None:
         super().__init__(0, None)
 
@@ -51,7 +35,7 @@ class _TerminatorTask(Task):
         pass
 
 
-class TimerManager:
+class TimerManagerProcess:
     def __init__(self) -> None:
         self._process_queue = Queue()
         self._process_workers: list[_ConsumerProcess] = []
@@ -68,7 +52,7 @@ class TimerManager:
 
     def join(self):
         for p in self._process_workers:
-            self.add_task(_TerminatorTask())
+            self.add_task(_TerminatorTaskProcess())
 
         for p in self._process_workers:
             p.join()
@@ -105,7 +89,7 @@ class _ConsumerProcess:
                     pass
             else:
                 new_task: Task = incoming
-                if isinstance(incoming, _TerminatorTask):
+                if isinstance(incoming, _TerminatorTaskProcess):
                     return
 
                 self._sorting_queue.put((new_task.get_time(), new_task))
@@ -115,7 +99,7 @@ class _ConsumerProcess:
         keep_going = True
         while keep_going:
             task: Task = self._sorting_queue.get()[1]
-            if isinstance(task, _TerminatorTask):
+            if isinstance(task, _TerminatorTaskProcess):
                 if self._sorting_queue.qsize() == 0:
                     return
             elif time() >= task.get_time():
@@ -128,30 +112,53 @@ class _ConsumerProcess:
     def join(self):
         self._subprocess.join()
 
+######################## Test ########################
 
-def main():
-    timer = TimerManager()
+class Colors:
+    HEADER = '\033[95m'
+    BLUE = '\033[94m'
+    CYAN = '\033[96m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    RESET = '\033[0m'
+
+def format_msg(delay):
+    return "{} printed in {}{}{} seconds delay.{}" \
+                .format(Colors.BLUE, Colors.CYAN, delay, Colors.BLUE, Colors.RESET)
+
+
+def test():
+    from threading import Semaphore
+    from time import sleep
+
+    timer = TimerManagerProcess()
     timer.create_consumer_processes()
+
+    sem = Semaphore(0)
 
     all_tasks = []
     for i in range(10, 0, -1):
-        new_task = Task(time() + i, print, f"printed in {i} seconds delay")
+        new_task = Task(time() + i, print, format_msg(i))
         all_tasks.append(new_task)
         timer.add_task(new_task)
-    
-    timer.remove_task(all_tasks[0])
-    timer.remove_task(all_tasks[-1])
-    sleep(10)
-    a = input("press any key to contine\n")
-    print("adding new tasks")
 
+    print(Colors.YELLOW + "Sleeping for 15 seconds" + Colors.RESET)
+    sleep(15)
+    print(Colors.YELLOW + "Starting second task set" + Colors.RESET)
+
+    all_tasks.clear()
     for i in range(10, 0, -1):
-        new_task = Task(time() + i, print, f"printed in {i} seconds delay")
+        new_task = Task(time() + i, print, format_msg(i))
         all_tasks.append(new_task)
         timer.add_task(new_task)
 
-    timer.join()
+    for i in range(0, 10, 2):
+        timer.remove_task(all_tasks[i])
 
+    timer.join() #FIXME: deadlock
 
 if __name__ == '__main__':
-    main()
+    test()

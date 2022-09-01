@@ -1,61 +1,9 @@
-# Design:
-#
-#   main process:
-#       for adding: adds new tasks to a process shared queue
-#       for removal: adds the tasks UUID to the queue
-# 
-# 
-#   worker process(s):
-#       has 2 threads:
-#           1. thread that pop the shared queue
-#               - adding: adds the new task to a local priority queue
-#                   and a local dictionary with the task's UUID as key
-#               - removal: pops an UUID, go to the tasks object in the dict 
-#                   and mark it as inactive
-#           2. thread that pop the tasks from local sorted queue, 
-#               if their time arrived:
-#                   if active: call the callback
-#               else put back in local priority queue 
-
-
-
-from time import time, sleep
-from threading import Thread, Semaphore, Lock
+from time import time
+from threading import Thread, Lock
 from queue import PriorityQueue
-from uuid import UUID, uuid4
+from uuid import UUID
 
-class Colors:
-    HEADER = '\033[95m'
-    BLUE = '\033[94m'
-    CYAN = '\033[96m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    RED = '\033[91m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-    RESET = '\033[0m'
-
-class Task:
-    def __init__(self, time, func, *args) -> None:
-        self._time = time
-        self._func = func
-        self._args = args
-        self._is_active = True
-        self._uuid = uuid4()
-
-    def get_time(self):
-        return self._time
-
-    def get_uuid(self):
-        return self._uuid
-
-    def __call__(self):
-        self._func(*self._args)
-    
-    def __repr__(self) -> str:
-        return "Task {}. time: {}. callback: {}. args: {}" \
-                .format(self.get_uuid(), self.get_time(), self._func, self._args)
-
+from task import Task
 
 class _TerminatorTask(Task):
     def __init__(self) -> None:
@@ -63,7 +11,6 @@ class _TerminatorTask(Task):
 
     def __call__(self):
         pass
-
 
 class TimerManager:
     def __init__(self) -> None:
@@ -105,7 +52,20 @@ class TimerManager:
         print(f"{self._sorting_thread} is out")
 
 
-def last_task(sem: Semaphore):
+######################## Test ########################
+
+class Colors:
+    HEADER = '\033[95m'
+    BLUE = '\033[94m'
+    CYAN = '\033[96m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    RESET = '\033[0m'
+
+def last_task(sem):
     sem.release()
 
 def format_msg(delay):
@@ -119,7 +79,10 @@ def formated_list_print(l):
     print("List len:", len(l))
     print(Colors.RESET)
 
+
 def test():
+    from threading import Semaphore
+
     timer = TimerManager()
     sem = Semaphore(0)
 
@@ -149,7 +112,6 @@ def test():
     sem.acquire()
     print(Colors.GREEN + "Finished second tasks set" + Colors.RESET)
 
-    
     timer.join()
 
 if __name__ == '__main__':
