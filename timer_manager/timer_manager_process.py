@@ -25,7 +25,7 @@ from threading import Thread
 from queue import PriorityQueue
 from uuid import UUID
 
-from task import Task
+from .task import Task
 
 class _TerminatorTaskProcess(Task):
     def __init__(self) -> None:
@@ -111,54 +111,3 @@ class _ConsumerProcess:
 
     def join(self):
         self._subprocess.join()
-
-######################## Test ########################
-
-class Colors:
-    HEADER = '\033[95m'
-    BLUE = '\033[94m'
-    CYAN = '\033[96m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    RED = '\033[91m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-    RESET = '\033[0m'
-
-def format_msg(delay):
-    return "{} printed in {}{}{} seconds delay.{}" \
-                .format(Colors.BLUE, Colors.CYAN, delay, Colors.BLUE, Colors.RESET)
-
-
-def test():
-    from threading import Semaphore
-    from time import sleep
-
-    timer = TimerManagerProcess()
-    timer.create_consumer_processes()
-
-    sem = Semaphore(0)
-
-    all_tasks = []
-    for i in range(10, 0, -1):
-        new_task = Task(time() + i, print, format_msg(i))
-        all_tasks.append(new_task)
-        timer.add_task(new_task)
-
-    print(Colors.YELLOW + "Sleeping for 15 seconds" + Colors.RESET)
-    sleep(15)
-    print(Colors.YELLOW + "Starting second task set" + Colors.RESET)
-
-    all_tasks.clear()
-    for i in range(10, 0, -1):
-        new_task = Task(time() + i, print, format_msg(i))
-        all_tasks.append(new_task)
-        timer.add_task(new_task)
-
-    for i in range(0, 10, 2):
-        timer.remove_task(all_tasks[i])
-
-    timer.join() #FIXME: deadlock
-
-if __name__ == '__main__':
-    test()

@@ -1,6 +1,6 @@
 import time
 import os
-from timer_manager import TimerManager, Task
+from timer_manager import Task, TimerManager
 from flask import Flask, request
 
 app = Flask(__name__)
