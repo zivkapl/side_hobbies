@@ -1,13 +1,25 @@
 import time
 import os
-from TimerManager import TimerManager, Task
+# from TimerManager import TimerManager, Task
+from ThreadedTimerManager import TimerManager, Task
 from flask import Flask, request
 
 app = Flask(__name__)
 timer = None
 db = {}
 
+def update_db():
+    keys_to_delete = []
+    active_tasks = timer.active_tasks()
+    for key, task in db.items():
+        if task not in active_tasks:
+            keys_to_delete.append(key)
+
+    for key in keys_to_delete:
+        db.pop(key)
+
 def get_handler(request):
+    update_db()
     return "Currently active timers: {}".format("".join([ 'task ' + str(uuid) + '\n' for uuid in db.keys() ]))
 
 def post_handler(request):
@@ -47,6 +59,6 @@ def handler():
 
 if __name__ == "__main__":
     timer = TimerManager()
-    timer.create_consumer_processes()
+    # timer.create_consumer_processes()
     app.run(host='0.0.0.0', port=81)
 
